@@ -1,59 +1,26 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useFetch from "./hooks/useFetch";
+
 import 'bootstrap/dist/css/bootstrap.css';
 import './App.css';
 
 const SOURCE = "http://universities.hipolabs.com/search?";
 
-interface University {
-  name: string,
-  alpha_two_code: string,
-  country: string,
-  "state-province": string,
-  domains: string,
-  web_pages: []
-}
-
 export default function Universities() {
 
-  const [universities, setUniversities] = useState<University[]>([]);
   const [typeOfSearch, setTypeOfSearch] = useState("country");
-  const [isLoading, setIsLoading] = useState(false);
   const [text, setText] = useState("");
-  const [error, setError] = useState();
   const [size, setSize] = useState(15);
 
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      setIsLoading(true);
+  const {data : universities, isLoading, error} = useFetch(SOURCE + typeOfSearch + "=" + text);
 
-      try {
-        const response = await fetch(SOURCE + typeOfSearch + "=" + text);
-        const universities = (await response.json()) as University[];
-        setUniversities(universities);
-      } catch (e: any) {
-        setError(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchUniversities();
-  }, [text, typeOfSearch]);
+  if (error) return <h1 className="text-center bg-dark my-1 text-white">Error in loading universities</h1>;
 
-  if (error) {
-    return <h1 className="text-center bg-dark my-1 text-white">Error in loading universities</h1>;
-  }
+  function handleChangeText(event: any) { setText(event.target.value); }
 
-  function handleChangeText(event: any) {
-    setText(event.target.value);
-  }
+  function handleChangeType(event: any) { setTypeOfSearch(event.target.value); }
 
-  function handleChangeType(event: any) {
-    setTypeOfSearch(event.target.value);
-  }
-
-  function handleSize(event: any) {
-    setSize(event.target.value);
-  }
+  function handleSize(event: any) { setSize(event.target.value); }
 
   function getFlagEmoji(countryCode : string) {
     const codePoints = countryCode
@@ -89,6 +56,7 @@ export default function Universities() {
             <div className="col-sm-2">
               <input type="number" className="mb-3 form-control my-3" placeholder={"Insert a number"} value={size} onChange={handleSize} />
             </div>
+            <label className="text-white mx-2"> / {universities.length}</label>
           </div>
         </form>
       </div>
@@ -102,7 +70,7 @@ export default function Universities() {
               <div className="card-body mx-5">
                 <div className="row justify-content-center">
                   <div className="col d-flex flex-row">
-                    <p className="mr-3 mx-1">[{getFlagEmoji(university.alpha_two_code)}]</p>
+                    <p className="mr-3 mx-2">{getFlagEmoji(university.alpha_two_code)}</p>
                     <h5 className="card-title">{university.name}</h5>
                   </div>
                 </div>
